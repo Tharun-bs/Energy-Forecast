@@ -33,10 +33,11 @@ A web-based application that predicts **domestic** or **industrial** energy cons
 
 ```bash
 .
+├── templates
+   ├── index.html                          # Frontend HTML with animations
 ├── app.py                              # Flask backend
 ├── data.py                             # Synthetic data generator
 ├── df_energy.py                        # Training and saving Prophet models
-├── index.html                          # Frontend HTML with animations
 ├── synthetic_domestic_energy_data.csv  # Synthetic data for domestic use
 ├── synthetic_industrial_energy_data.csv (optional if included)
 ├── synthetic_industrial_energy_data_trained_prophet_model.pkl
