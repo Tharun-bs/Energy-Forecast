@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Consumption Forecast</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        /* Global Styles with Dark Theme */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #5761b2 0%, #1fc5a8 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: #fff;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Animated Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grid" width="10" height="10" patternUnits="userSpaceOnUse"><path d="M 10 0 L 0 0 0 10" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/></pattern></defs><rect width="100" height="100" fill="url(%23grid)"/></svg>');
+            animation: drift 20s ease-in-out infinite;
+            z-index: -1;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translateX(0) translateY(0); }
+            25% { transform: translateX(-20px) translateY(-10px); }
+            50% { transform: translateX(20px) translateY(10px); }
+            75% { transform: translateX(-10px) translateY(20px); }
+        }
+
+        /* Floating Particles */
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 6s ease-in-out infinite;
+            pointer-events: none;
+        }
+
+        .particle:nth-child(1) { width: 8px; height: 8px; top: 20%; left: 10%; animation-delay: 0s; }
+        .particle:nth-child(2) { width: 12px; height: 12px; top: 60%; left: 80%; animation-delay: 2s; }
+        .particle:nth-child(3) { width: 6px; height: 6px; top: 80%; left: 20%; animation-delay: 4s; }
+        .particle:nth-child(4) { width: 10px; height: 10px; top: 40%; left: 90%; animation-delay: 1s; }
+        .particle:nth-child(5) { width: 14px; height: 14px; top: 10%; left: 70%; animation-delay: 3s; }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) rotate(0deg); opacity: 0.3; }
+            50% { transform: translateY(-20px) rotate(180deg); opacity: 0.8; }
+        }
+
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 
+                0 20px 40px rgba(0, 0, 0, 0.2),
+                0 0 80px rgba(102, 126, 234, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            width: 100%;
+            max-width: 1800px;
+            position: relative;
+            transform: translateY(0);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+            animation: slideIn 1s ease-out;
+        }
+
+        @keyframes slideIn {
+            0% { opacity: 0; transform: translateY(50px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            border-radius: 24px;
+            padding: 2px;
+            background: linear-gradient(45deg, #667eea, #764ba2, #f093fb, #f5576c);
+            mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            mask-composite: xor;
+            -webkit-mask-composite: xor;
+            opacity: 0;
+            animation: borderGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes borderGlow {
+            0%, 100% { opacity: 0; }
+            50% { opacity: 0.6; }
+        }
+
+        .container:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 
+                0 32px 64px rgba(0, 0, 0, 0.3),
+                0 0 120px rgba(102, 126, 234, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        h1 {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff 0%, #f093fb 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-align: center;
+            margin-bottom: 32px;
+            position: relative;
+            animation: titlePulse 2s ease-in-out infinite;
+        }
+
+        @keyframes titlePulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        h1::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background: linear-gradient(90deg, #667eea, #f093fb);
+            border-radius: 2px;
+            animation: underlineGlow 2s ease-in-out infinite;
+        }
+
+        @keyframes underlineGlow {
+            0%, 100% { box-shadow: 0 0 5px rgba(240, 147, 251, 0.5); }
+            50% { box-shadow: 0 0 20px rgba(240, 147, 251, 0.8); }
+        }
+
+        /* Enhanced Form Styles */
+        .form-group {
+            margin-bottom: 24px;
+            position: relative;
+            animation: fadeInUp 0.6s ease-out forwards;
+            opacity: 0;
+        }
+
+        .form-group:nth-child(1) { animation-delay: 0.1s; }
+        .form-group:nth-child(2) { animation-delay: 0.2s; }
+        .form-group:nth-child(3) { animation-delay: 0.3s; }
+        .form-group:nth-child(4) { animation-delay: 0.4s; }
+        .form-group:nth-child(5) { animation-delay: 0.5s; }
+        .form-group:nth-child(6) { animation-delay: 0.6s; }
+        .form-group:nth-child(7) { animation-delay: 0.7s; }
+        .form-group:nth-child(8) { animation-delay: 0.8s; }
+
+        @keyframes fadeInUp {
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.9);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+
+        label::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 4px;
+            height: 4px;
+            background: #f093fb;
+            border-radius: 50%;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 16px 20px;
+            margin: 0;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 400;
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            backdrop-filter: blur(10px);
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        input:focus, select:focus {
+            border-color: #f093fb;
+            box-shadow: 
+                0 0 0 4px rgba(240, 147, 251, 0.2),
+                0 8px 32px rgba(240, 147, 251, 0.3);
+            outline: none;
+            transform: translateY(-2px);
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        select {
+            cursor: pointer;
+        }
+
+        select option {
+            background: #2a2a3e;
+            color: #fff;
+            padding: 12px;
+        }
+
+        /* Enhanced Button */
+        .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            color: white;
+            padding: 18px 32px;
+            border: none;
+            border-radius: 16px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: 12px;
+        }
+
+        .submit-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+            transition: left 0.6s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 
+                0 16px 32px rgba(0, 0, 0, 0.3),
+                0 0 40px rgba(240, 147, 251, 0.5);
+        }
+
+        .submit-btn:hover::before {
+            left: 100%;
+        }
+
+        .submit-btn:active {
+            transform: translateY(-2px);
+        }
+
+        /* Enhanced Results */
+        .result, .error {
+            text-align: center;
+            margin-top: 32px;
+            padding: 24px;
+            border-radius: 16px;
+            position: relative;
+            animation: resultSlide 0.6s ease-out;
+        }
+
+        @keyframes resultSlide {
+            0% { opacity: 0; transform: translateY(20px) scale(0.9); }
+            100% { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .result {
+            background: linear-gradient(135deg, rgba(76, 175, 80, 0.2) 0%, rgba(56, 142, 60, 0.3) 100%);
+            border: 1px solid rgba(76, 175, 80, 0.4);
+            color: #81c784;
+            backdrop-filter: blur(10px);
+        }
+
+        .result::before {
+            content: '⚡';
+            font-size: 32px;
+            display: block;
+            margin-bottom: 12px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
+        }
+
+        .error {
+            background: linear-gradient(135deg, rgba(244, 67, 54, 0.2) 0%, rgba(211, 47, 47, 0.3) 100%);
+            border: 1px solid rgba(244, 67, 54, 0.4);
+            color: #ef5350;
+            backdrop-filter: blur(10px);
+        }
+
+        .error::before {
+            content: '⚠️';
+            font-size: 24px;
+            display: block;
+            margin-bottom: 8px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .container {
+                margin: 20px;
+                padding: 24px;
+                border-radius: 20px;
+            }
+
+            h1 {
+                font-size: 24px;
+            }
+
+            input, select {
+                padding: 14px 16px;
+                font-size: 16px;
+            }
+
+            .submit-btn {
+                padding: 16px 24px;
+                font-size: 15px;
+            }
+        }
+
+        /* Loading Animation */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #f093fb;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Floating Particles -->
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+    <div class="particle"></div>
+
+    <div class="container">
+        <h1>Energy Consumption Forecast</h1>
+
+        <form action="/predict" method="POST" id="forecastForm">
+            <div class="form-group">
+                <label for="timestamp">📅 Enter Date (DD-MM-YYYY):</label>
+                <input type="text" id="timestamp" name="timestamp" placeholder="17-09-2024" required pattern="\d{2}-\d{2}-\d{4}" title="Date format should be DD-MM-YYYY">
+            </div>
+
+            <div class="form-group">
+                <label for="temperature">🌡️ Temperature:</label>
+                <select id="temperature" name="temperature" required>
+                    <option value="Cold">❄️ Cold (≤ 15°C)</option>
+                    <option value="Moderate">🌤️ Moderate (16-25°C)</option>
+                    <option value="Hot">🔥 Hot (≥ 26°C)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="humidity">💧 Humidity:</label>
+                <select id="humidity" name="humidity" required>
+                    <option value="Low">🏜️ Low (≤ 40%)</option>
+                    <option value="Moderate">🌿 Moderate (41-70%)</option>
+                    <option value="High">💦 High (≥ 71%)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="solar_radiation">☀️ Solar Radiation:</label>
+                <select id="solar_radiation" name="solar_radiation" required>
+                    <option value="Low">🌫️ Low (≤ 150 W/m²)</option>
+                    <option value="Moderate">⛅ Moderate (151-250 W/m²)</option>
+                    <option value="High">☀️ High (≥ 251 W/m²)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="time_of_day">🕐 Time of Day:</label>
+                <select id="time_of_day" name="time_of_day" required>
+                    <option value="Morning">🌅 Morning (6 AM–9 AM)</option>
+                    <option value="Noon">☀️ Noon (12 PM–4 PM)</option>
+                    <option value="Evening">🌆 Evening (6 PM–10 PM)</option>
+                    <option value="Night">🌙 Night (11 PM–5 AM)</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="holiday_indicator">📅 Holiday Indicator:</label>
+                <select id="holiday_indicator" name="holiday_indicator" required>
+                    <option value="0">🏢 Weekday</option>
+                    <option value="1">🎉 Weekend/Holiday</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="appliance_usage">🔌 Appliance Usage:</label>
+                <select id="appliance_usage" name="appliance_usage" required>
+                    <option value="0">📱 Low</option>
+                    <option value="1">🏭 High</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="usage_type">🏠 Usage Type:</label>
+                <select id="usage_type" name="usage_type" required>
+                    <option value="Domestic">🏡 Domestic</option>
+                    <option value="Industrial">🏭 Industrial</option>
+                </select>
+            </div>
+
+            <button type="submit" class="submit-btn">
+                Get Prediction
+                <div class="loading"></div>
+            </button>
+        </form>
+
+        <!-- Display Results -->
+        {% if predicted_energy %}
+            <div class="result">
+                <h3>Predicted Energy Consumption: {{ predicted_energy }} kWh</h3>
+                <p>Date: {{ timestamp }}</p>
+            </div>
+        {% endif %}
+
+        <!-- Display Error Message -->
+        {% if error %}
+            <div class="error">
+                <p>{{ error }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+        // Enhanced form interactions
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('forecastForm');
+            const inputs = document.querySelectorAll('input, select');
+            const submitBtn = document.querySelector('.submit-btn');
+            const loading = document.querySelector('.loading');
+
+            // Add interactive focus effects
+            inputs.forEach(input => {
+                input.addEventListener('focus', function() {
+                    this.parentElement.style.transform = 'translateX(8px)';
+                    this.parentElement.style.transition = 'transform 0.3s ease';
+                });
+
+                input.addEventListener('blur', function() {
+                    this.parentElement.style.transform = 'translateX(0)';
+                });
+
+                // Add typing animation for inputs
+                input.addEventListener('input', function() {
+                    this.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        this.style.transform = 'scale(1)';
+                    }, 150);
+                });
+            });
+
+            // Enhanced form submission
+            form.addEventListener('submit', function(e) {
+                submitBtn.style.transform = 'scale(0.95)';
+                loading.style.display = 'block';
+                
+                setTimeout(() => {
+                    submitBtn.style.transform = 'scale(1)';
+                }, 200);
+            });
+
+            // Add particle interaction on hover
+            document.addEventListener('mousemove', function(e) {
+                const particles = document.querySelectorAll('.particle');
+                const mouseX = e.clientX / window.innerWidth;
+                const mouseY = e.clientY / window.innerHeight;
+
+                particles.forEach((particle, index) => {
+                    const speed = (index + 1) * 0.5;
+                    const x = mouseX * 20 * speed;
+                    const y = mouseY * 20 * speed;
+                    
+                    particle.style.transform = `translate(${x}px, ${y}px)`;
+                });
+            });
+        });
+    </script>
+</body>
+</html>
